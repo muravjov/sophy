@@ -1030,7 +1030,7 @@ cdef class _MultiIndex(_Index):
 
     cdef extract_key(self, void *obj):
         cdef:
-            bytes bkey
+            #bytes bkey
             _Index subindex
             list result = []
 
