@@ -265,7 +265,7 @@ cdef class Sophia(_SophiaObject):
         self._add_db(
             Database(self, name, index_type),
             self.is_open and auto_open)
-        self.db_defs.append((name, index_type))
+        #self.db_defs.append((name, index_type))
         return self.dbs[name]
 
     # Properties: key, is_string?, is_readonly?
