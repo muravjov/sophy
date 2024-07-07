@@ -1,5 +1,7 @@
+# cython: language_level=3
 from cpython.bytes cimport PyBytes_AsStringAndSize
 from cpython.bytes cimport PyBytes_Check
+from cpython.unicode cimport PyUnicode_Check
 from cpython.mem cimport PyMem_Free
 from cpython.mem cimport PyMem_Malloc
 from cpython.unicode cimport PyUnicode_AsUTF8String
@@ -41,6 +43,18 @@ cdef extern from "src/sophia.h":
     cdef int sp_commit(void *)
 
 cdef bint IS_PY3K = PY_MAJOR_VERSION == 3
+
+cdef inline unicode decode(key):
+    cdef unicode ukey
+    if PyBytes_Check(key):
+        ukey = key.decode('utf-8')
+    elif PyUnicode_Check(key):
+        ukey = <unicode>key
+    elif key is None:
+        return None
+    else:
+        ukey = unicode(key)
+    return ukey
 
 cdef inline bytes encode(obj):
     cdef bytes result
@@ -522,12 +536,12 @@ class CannotCloseException(Exception): pass
 
 cdef class Database(_BaseDBObject):
     cdef:
-        readonly bytes name
+        readonly unicode name
         readonly _ConfigManager config
         tuple index_type
 
     def __cinit__(self, Sophia sophia, name, index_type=None):
-        self.name = encode(name)
+        self.name = decode(name)
 
         if not index_type:
             self.index_type = ('string',)
@@ -553,7 +567,8 @@ cdef class Database(_BaseDBObject):
             self.handle = <void *>0
 
     cdef configure(self):
-        sp_setstring(self.sophia.handle, 'db', <const char *>self.name, 0)
+        bname = encode(self.name)
+        sp_setstring(self.sophia.handle, 'db', <const char *>bname, 0)
         self.index = self._get_index()
         self.index.configure()
         self.mmap = 1
@@ -647,11 +662,11 @@ cdef class Database(_BaseDBObject):
 cdef class View(_BaseDBObject):
     cdef:
         Database db
-        bytes name
+        unicode name
 
     def __cinit__(self, Sophia sophia, Database db, name):
         self.db = db
-        self.name = encode(name)
+        self.name = decode(name)
 
     def __init__(self, Sophia sophia, Database db, name):
         self.open()
@@ -666,7 +681,8 @@ cdef class View(_BaseDBObject):
         self.handle = <void *>0
 
     cdef void *_create_handle(self):
-        sp_setstring(self.sophia.handle, 'view', <char *>self.name, 0)
+        bname = encode(self.name)
+        sp_setstring(self.sophia.handle, 'view', <char *>bname, 0)
         return sp_getobject(self.sophia.handle, encode('view.%s' % self.name))
 
     cdef _Index _get_index(self):
