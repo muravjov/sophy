@@ -142,7 +142,8 @@ cdef class _ConfigManager(object):
 
     cpdef get_option(self, key, string=True):
         if string:
-            return _getstring(self.sophia.handle, key)
+            bkey = encode(key)
+            return _getstring(self.sophia.handle, bkey)
         else:
             bkey = encode(key)
             return sp_getint(self.sophia.handle, <const char *>bkey)
