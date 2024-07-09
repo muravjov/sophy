@@ -78,11 +78,6 @@ cdef inline _getstring(void *obj, const char *key):
     buf = <char *>sp_getstring(obj, key, &nlen)
     if buf:
         value = buf[:nlen - 1]
-        if IS_PY3K:
-            try:
-                return value.decode('utf-8')
-            except UnicodeDecodeError:
-                pass
         return value
 
 cdef inline _check(void *env, int rc):
@@ -988,9 +983,9 @@ cdef class _MultiIndex(_Index):
         self.initialize_indexes(index_types)
 
     cdef initialize_indexes(self, tuple index_types):
+        key = 'key'
+        suffixes = ' bcdefgh'
         cdef:
-            bytes bkey = encode('key')
-            bytes suffixes = encode(' bcdefgh')
             _Index index
             int i
             list accum = []
@@ -1002,9 +997,9 @@ cdef class _MultiIndex(_Index):
                 raise ValueError('Unrecognized index type, must be one of: %s'
                                  % ', '.join(sorted(INDEX_TYPE_MAP)))
             if i > 0:
-                bkey = encode('key_%s' % suffixes[i])
+                key = 'key_%s' % suffixes[i]
 
-            accum.append(IndexType(self.sophia, self.db, key=bkey))
+            accum.append(IndexType(self.sophia, self.db, key=key))
 
         self.indexes = tuple(accum)
         self.keys = tuple([index.key for index in accum])
