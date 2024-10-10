@@ -22,6 +22,10 @@ library_source = "src/sophia.c"
 sophy = Extension(
     "sophy",
     # extra_compile_args=['-g', '-O0'],
+    # :KLUDGE: we don't want to fix sophia.c line (errs in macos),
+    # better to update to the latest sophia sources:
+    # t->id = id++;
+    extra_compile_args=["-Wno-error=int-conversion"],
     # extra_link_args=['-g'],
     sources=[python_source, library_source],
 )
