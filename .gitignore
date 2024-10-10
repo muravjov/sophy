@@ -1,0 +1,6 @@
+/.vscode
+/build
+/dist
+
+/sophy.cpython*
+/sophy.egg-info
